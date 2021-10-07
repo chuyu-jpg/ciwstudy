@@ -1,0 +1,49 @@
+
+
+.decl SimpleThis(?container:Type, ?invocation: MethodInvocation, ?v:Var)
+.decl SimpleThisWithFlow(?container:Type, ?a:Var, ?i:MethodInvocation)
+
+SimpleThis(?container, ?invocation, ?actual) :-
+  Composite(?container, _, _),
+  SimpleRecursiveCallThis(_, ?container, _, ?invocation),
+  mainAnalysis.OptVirtualMethodInvocationBase(?invocation, ?actual).
+
+.output SimpleThis
+        
+SimpleThisWithFlow(?container, ?a, ?invocation) :-
+  SimpleThis(?container, ?invocation, ?a),
+  Instruction_Method(?invocation, ?method),
+  ThisVar(?method, ?this),
+    #ifdef ITER
+
+  (
+  LoopedMethods(?method, ?method);
+ (LoopedMethods(?method, ?m),
+ basic.MethodOverridesOther(?method, ?m))
+ ),
+
+
+
+   #endif
+
+  FlowPath(?a, ?this),
+  FlowPath(?a, ?t),
+  FlowFromLoad(?sig, _, ?t),
+ // IterVar(?method, ?ar),
+ // FlowPath(?a, ?ar),
+  #ifdef ARRAY_LOADS
+  ArrayVar(?method, ?ar),
+  FlowPath(?a, ?ar),
+  #endif
+  Composite(?container, _, ?sig),
+  !Flow(?this, ?a).
+
+
+.output SimpleThisWithFlow
+        
+FlowPath(?a, ?to) :-
+  SimpleThis(_, _, ?a),
+  Flow(?to, ?a).
+
+
+        

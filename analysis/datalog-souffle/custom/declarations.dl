@@ -1,0 +1,15 @@
+.decl FieldParamType(?owner:Type, ?name:symbol, ?type:Type)
+
+.decl IsSerializable(?class:Type)
+
+.decl InputPackage(?packageName:symbol)
+
+.decl AllMethods(?tgt:Method, ?src:Method)
+
+.decl Overrides(?methodA:Method, ?methodB:Method)
+
+
+
+
+
+

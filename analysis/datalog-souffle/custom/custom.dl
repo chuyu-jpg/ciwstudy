@@ -1,0 +1,129 @@
+
+
+
+#include "recursion_macros.h"
+
+#include "declarations.dl"
+#include "util.dl"
+#include "import-type-sig.dl"
+#include "composites.dl"
+
+#include "heap_flow.dl"
+
+#ifdef SIMPLE
+
+#include "simple-recursion.dl"
+
+
+#ifdef TRAVERSAL
+
+
+#ifdef THIS
+
+#include "simple-this-traversal.dl"
+
+#endif // end this
+
+#ifdef PARAM
+
+#include "simple-param-traversal.dl"
+
+#endif // end param
+
+
+#endif // end traversal
+
+
+#ifdef TRIGGER
+
+#ifdef THIS
+
+#include "simple-this-trigger.dl"
+
+#endif // this
+
+#ifdef PARAM
+
+#include "simple-param-trigger.dl"
+
+#endif
+
+#endif // end trigger
+
+#endif // end simple recursion
+
+
+
+
+#ifdef INDIRECT
+
+#include "indirect-recursion.dl"
+
+#ifdef TRAVERSAL
+
+#ifdef THIS
+#include "indirect-this-traversal.dl"
+#endif
+
+#ifdef PARAM
+#include "indirect-param-traversal.dl"
+#endif
+
+#endif // traversal
+
+#ifdef TRIGGER
+
+#ifdef THIS
+#include "indirect-this-trigger.dl"
+#endif
+
+#ifdef PARAM
+#include "indirect-param-trigger.dl"
+#endif
+
+#endif // trigger
+
+#endif // end indirect
+
+
+
+
+
+
+#ifdef INDIRECT2
+
+#include "indirect2-recursion.dl"
+
+#ifdef TRAVERSAL
+
+#ifdef THIS
+#include "indirect2-this-traversal.dl"
+#endif
+
+/*
+#ifdef PARAM
+#include "indirect-param-traversal.dl"
+#endif
+*/
+
+#endif // traversal
+
+#ifdef TRIGGER
+
+#ifdef THIS
+#include "indirect2-this-trigger.dl"
+#endif
+
+/*
+#ifdef PARAM
+#include "indirect-param-trigger.dl"
+#endif
+*/
+
+#endif // trigger
+
+#endif // end indirect
+
+
+
+#include "tests.dl"

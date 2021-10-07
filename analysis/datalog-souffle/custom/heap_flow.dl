@@ -1,0 +1,53 @@
+
+.decl BridgeEdge(?from:Var, ?to:Var)
+.decl Flow(?from:Var, ?to:Var)
+.decl FlowPath(?to:Var, ?from:Var)
+.decl FlowFromLoad(?sig:Field, ?from:Var, ?to:Var)
+.decl FlowFromArray(?from:Var, ?to:Var)
+
+
+BridgeEdge(?from, ?to) :-
+  mainAnalysis.StoreHeapInstanceField(?signature, _, ?basevalue, _, ?from),
+  mainAnalysis.LoadHeapInstanceField(_, ?to, ?signature, _, ?basevalue).
+
+
+Flow(?from, ?to) :-
+  BridgeEdge(?from, ?to).
+
+Flow(?from, ?to)  :-
+  mainAnalysis.Reachable(?inmethod),
+  AssignLocal(?from, ?to, ?inmethod).
+
+Flow(?from, ?to) :-
+  mainAnalysis.Reachable(?inmethod),
+  AssignCast(_, ?from, ?to, ?inmethod).
+
+FlowFromLoad(?sig, ?from, ?to),
+Flow(?from, ?to) :-
+  LoadInstanceField(?from, ?sig, ?to, _).
+
+// Interprocedural assigns
+Flow(?from, ?to) :-
+   mainAnalysis.OptReturnAssign(_, ?to, _, ?from).
+
+Flow(?from, ?to) :-
+   mainAnalysis.OptArgAssign(_, ?to, _, ?from, _).
+
+// end interprocedural assigns
+FlowFromArray(?from, ?to),
+Flow(?from, ?to) :-
+  LoadArrayIndex(?from, ?to, _).
+
+FlowPath(?a, ?from) :-
+  FlowPath(?a, ?to),
+  Flow(?from, ?to).
+
+Flow(?base, ?this) :-
+  VirtualMethodInvocation_Base(?invocation, ?base),
+  mainAnalysis.CallGraphEdge(_, ?invocation, _, ?m),
+  ThisVar(?m, ?this).
+
+Flow(?base, ?this) :-
+  SpecialMethodInvocation_Base(?invocation, ?base),
+  mainAnalysis.CallGraphEdge(_, ?invocation, _, ?m),
+  ThisVar(?m, ?this).

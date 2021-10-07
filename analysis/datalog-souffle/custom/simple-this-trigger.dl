@@ -1,0 +1,19 @@
+
+.decl SimpleThisTriggerInt(?container:Type, ?invocation:MethodInvocation, ?a:Var)
+.decl SimpleThisTrigger(?container:Type, ?invocation:MethodInvocation, ?a:Var)
+
+SimpleThisTriggerInt(?container, ?invocation, ?a) :-
+  SimpleThisWithFlow(?container, ?a, ?invocation),
+  mainAnalysis.Reachable(?toMethod),
+  mainAnalysis.CallGraphEdge(_, ?invocation, _, ?toMethod).
+
+
+SimpleThisTrigger(?container, ?invocation, ?a) :-
+  SimpleThisTriggerInt(?container, ?invocation, ?a),
+  mainAnalysis.VarPointsTo(_, ?value, _, ?a),
+  mainAnalysis.Value_Type(?value, ?c),
+  (basic.SubtypeOf(?c, ?container);
+  ?c = ?container).
+
+              
+.output SimpleThisTrigger

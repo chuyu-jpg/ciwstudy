@@ -1,0 +1,17 @@
+
+.decl SimpleParamTriggerInt(?container:Type, ?invocation:MethodInvocation, ?a:Var)
+.decl SimpleParamTrigger(?invocation:MethodInvocation, ?a:Var)
+
+SimpleParamTriggerInt(?container, ?invocation, ?a) :-
+ SimpleParamWithFlow(?container, ?invocation, ?a),
+ mainAnalysis.CallGraphEdge(_, ?invocation, _, ?toMethod),
+ mainAnalysis.Reachable(?toMethod).  
+
+SimpleParamTrigger(?invocation, ?a) :-
+ SimpleParamTriggerInt(?container, ?invocation, ?a),
+ mainAnalysis.VarPointsTo(_, ?value, _, ?a),
+ mainAnalysis.Value_Type(?value, ?c),
+  (basic.SubtypeOf(?c, ?container);
+   ?c = ?container).
+
+.output SimpleParamTrigger

@@ -1,0 +1,17 @@
+
+
+.decl _FieldSig(?owner:symbol, ?name:symbol, ?type:symbol)
+.input _FieldSig(IO="file", filename="/tmp/fields.fact", delimiter=",")
+
+.decl _LoopedMethods(?owner:symbol, ?name:symbol)
+.input _LoopedMethods(IO="file", filename="/tmp/looped.fact", delimiter="\t")
+
+.decl LoopedMethods(?m: Method, ?c:Method)
+
+LoopedMethods(?m, ?m1) :-
+  _LoopedMethods(?m, ?m1).
+
+FieldParamType(?owner, ?name, ?type) :-
+  _FieldSig(?owner, ?name, ?type).
+
+.output LoopedMethods

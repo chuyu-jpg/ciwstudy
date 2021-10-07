@@ -1,0 +1,115 @@
+
+
+.decl FieldName(?signature:Field, ?name:symbol)
+.decl One2One(?a:Type, ?b:Type)
+FieldName(?sig, ?name) :-
+ Field_SimpleName(?sig, ?name).
+
+.decl FieldComponentType(?componentType:Type, ?signature:Field)
+
+FieldComponentType(?componentType, ?signature) :-
+  Field_Type(?signature, ?fieldType),
+  isArrayType(?fieldType),
+  ComponentType(?fieldType, ?componentType).
+
+FieldComponentType(?type, ?signature) :-
+  FieldComponentType(?t, ?signature),
+  isArrayType(?t),
+  ComponentType(?t, ?type).
+
+
+.decl FieldExtractedType(?type:Type, ?signature: Field)
+
+FieldExtractedType(?type, ?signature) :-
+  FieldComponentType(?type, ?signature),
+  !isArrayType(?type).
+
+.decl ContainerType(?class:Type)
+
+ContainerType(?type) :-
+  basic.SubtypeOf(?type, ?interface),
+  isInterfaceType(?interface),
+  ?interface = "java.util.Map".
+
+ContainerType(?type) :-
+  basic.SubtypeOf(?type, ?interface),
+  isInterfaceType(?interface),
+  ?interface = "java.util.Collection".
+
+ContainerType(?type) :-
+  basic.SubtypeOf(?type, ?t),
+  ContainerType(?t).
+
+
+.decl One2ManyAssoc(?type:Type, ?otherType:Type, ?signature:Field)
+
+One2ManyAssoc(?type, ?otherType, ?signature) :-
+  FieldParamType(?type, ?name, ?otherType),
+  FieldName(?signature, ?name),
+  Field_DeclaringType(?signature, ?type),
+  Field_Type(?signature, ?fieldType),
+  ContainerType(?fieldType).
+
+One2ManyAssoc(?type, ?otherType, ?signature) :-
+  !FieldParamType(?type, ?name, _),
+  FieldName(?signature, ?name),
+  Field_DeclaringType(?signature, ?type),
+  Field_Type(?signature, ?fieldType),
+  ?otherType = "java.lang.Object",
+  ContainerType(?fieldType).
+
+One2ManyAssoc(?type, ?otherType, ?signature) :-
+  Field_DeclaringType(?signature, ?type),
+  FieldExtractedType(?otherType, ?signature).
+
+One2ManyAssoc(?type, ?otherType, ?signature) :-
+  isArrayType(?fieldType),
+  Field_Type(?signature, ?fieldType),
+  Field_DeclaringType(?signature, ?type),
+  FieldParamType(?type, ?name, ?otherType),
+  FieldName(?signature, ?name).
+
+.decl Composite(?container:Type, ?component:Type, ?signature:Field)
+
+Composite(?container, ?component, ?signature) :-
+  One2ManyAssoc(?container, ?component, ?signature),
+  (basic.SubtypeOf(?container, ?component) ;
+   ?container = ?component).
+
+.output Composite
+
+
+One2One(?type, ?childType) :-
+  One2ManyAssoc(_, ?type, _),
+  Field_Type(?sig, ?childType),
+  Field_DeclaringType(?sig, ?type).
+
+
+#ifdef DEEP_COMPOSITES
+
+
+Composite(?container, ?child, ?signature) :-
+  One2ManyAssoc(?container, ?component, ?signature),
+  One2One(?component, ?child),
+  (basic.SubtypeOf(?container, ?child) ;
+   ?container = ?child).
+
+#endif
+
+#ifdef OPAQUE_COMPOSITES
+// getParen getChild
+
+.decl OpaqueComposites(?class:Type, ?s:symbol)
+
+OpaqueComposites(?class, s) :-
+  Method_DeclaringType(?method, ?class),
+  Method_SimpleName(?method, ?methodName),
+  s = substr(?methodName, 0, 8),
+  ((s = "getParen", Method_ReturnType(?method, ?class)) ;
+   (s = "getChild",
+   Method_ReturnType(?method, ?class))).
+
+Composite(?container, ?container, ?s) :-
+  OpaqueComposites(?container, _),
+  ?s = "".
+#endif

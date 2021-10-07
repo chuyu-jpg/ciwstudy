@@ -1,0 +1,131 @@
+.decl FieldName(?signature:Field, ?name:symbol)
+
+FieldName(?sig, ?name) :-
+ Field_SimpleName(?sig, ?name).
+
+.decl FieldComponentType(?componentType:Type, ?signature:Field)
+
+FieldComponentType(?componentType, ?signature) :-
+  Field_DeclaringType(?signature, ?fieldType),
+  isArrayType(?fieldType),
+  ComponentType(?fieldType, ?componentType).
+
+FieldComponentType(?type, ?signature) :-
+  FieldComponentType(?t, ?signature),
+  isArrayType(?t),
+  ComponentType(?t, ?type).
+
+.decl FieldExtractedType(?type:Type, ?signature: Field)
+
+FieldExtractedType(?type, ?signature) :-
+  FieldComponentType(?type, ?signature),
+  !isArrayType(?type).
+
+.decl ContainerType(?class:Type)
+
+ContainerType(?type) :-
+  basic.SubtypeOf(?type, ?interface),
+  isInterfaceType(?interface),
+  ?interface = "java.util.Map".
+
+ContainerType(?type) :-
+  basic.SubtypeOf(?type, ?interface),
+  isInterfaceType(?interface),
+  ?interface = "java.util.Collection".
+
+ContainerType(?type) :-
+  basic.SubtypeOf(?type, ?t),
+  ContainerType(?t).
+
+
+.decl One2XAssoc(?type:Type, ?signature:Field)
+
+One2XAssoc(?type, ?signature) :-
+  Field_DeclaringType(?signature, ?type),
+  Field_Type(?signature, ?fieldType),
+  !isArrayType(?fieldType),
+  !ContainerType(?fieldType),
+  (basic.SubtypeOf(?type, ?fieldType) ;
+   ?type = ?fieldType).
+
+.decl One2XCount(?t: Type, x: number)
+
+One2XCount(?t, c) :-
+   One2XAssoc(?t, _),
+   c = count:{One2XAssoc(?t, _)}.
+
+ .output One2XCount
+
+.decl One2ManyAssoc(?type:Type, ?otherType:Type, ?signature:Field)
+
+One2ManyAssoc(?type, ?otherType, ?signature) :-
+  FieldParamType(?type, ?name, ?otherType),
+  FieldName(?signature, ?name),
+  Field_DeclaringType(?signature, ?type),
+  Field_Type(?signature, ?fieldType),
+  ContainerType(?fieldType).
+
+One2ManyAssoc(?type, ?otherType, ?signature) :-
+  Field_DeclaringType(?signature, ?type),
+  FieldExtractedType(?otherType, ?signature).
+
+One2ManyAssoc(?type, ?otherType, ?signature) :-
+  isArrayType(?fieldType),
+  Field_Type(?signature, ?fieldType),
+  Field_DeclaringType(?signature, ?type),
+  FieldParamType(?type, ?name, ?otherType),
+  FieldName(?signature, ?name).
+
+.decl Composite(?container:Type, ?component:Type, ?signature:Field)
+
+Composite(?container, ?component, ?signature) :-
+  One2ManyAssoc(?container, ?component, ?signature),
+  (basic.SubtypeOf(?container, ?component) ;
+   ?container = ?component).
+
+.output Composite
+
+.decl CompositeMultipleFields(?container:Type, ?component:Type, ?signature:Field)
+
+CompositeMultipleFields(?container, ?component, ?signature) :-
+   One2XAssoc(?container, ?signature), 
+   Field_Type(?signature, ?component),
+   One2XCount(?container, c),
+   c > 1.
+
+.output CompositeMultipleFields
+
+.decl SerializableComposite(?container:Type, ?component:Type, ?signature:Field)
+
+SerializableComposite(?container, ?component, ?signature) :-
+   Composite(?container, ?component, ?signature),
+   IsSerializable(?container).
+
+.output SerializableComposite
+
+.decl SerializableCompositeMultipleFields(?container:Type, ?component:Type, ?signature:Field)
+
+SerializableCompositeMultipleFields(?container, ?component, ?signature) :-
+   CompositeMultipleFields(?container, ?component, ?signature),
+   IsSerializable(?container).
+
+.output SerializableCompositeMultipleFields
+
+// getParen getChild
+
+.decl OpaqueComposites(?class:Type, ?s:symbol)
+
+OpaqueComposites(?class, s) :-
+  Method_DeclaringType(?method, ?class),
+  Method_SimpleName(?method, ?methodName),
+  s = substr(?methodName, 0, 8),
+  ((s = "getParen", Method_ReturnType(?method, ?class)) ;
+   (s = "getChild",
+   Method_ReturnType(?method, ?class))).
+
+Composite(?container, ?container, ?s) :-
+  OpaqueComposites(?container, _),
+  ?s = "".
+
+.output OpaqueComposites
+

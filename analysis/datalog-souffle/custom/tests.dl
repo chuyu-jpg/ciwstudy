@@ -1,0 +1,7 @@
+
+.decl TestIsSerializable(?type:symbol)
+
+TestIsSerializable(?type) :-
+  IsSerializable(?type).
+
+

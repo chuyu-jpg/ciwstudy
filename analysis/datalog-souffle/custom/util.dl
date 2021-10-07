@@ -1,0 +1,23 @@
+IsSerializable(?subtype) :-
+   basic.SubtypeOf(?subtype, ?type),
+   isInterfaceType(?type),
+   ?type = "java.io.Serializable".
+
+
+AllMethods(?tgt, ?src) :-
+  Method_DeclaringType(?src, ?type),
+  basic.SubtypeOf(?subtype, ?type),
+  Method_Descriptor(?src, ?desc),
+  Method_SimpleName(?src, ?name),
+  basic.MethodLookup(?name, ?desc, ?subtype, ?tgt).
+
+
+Overrides(?methodA, ?methodB) :-
+  Method_DeclaringType(?methodA, ?typeA),
+  Method_DeclaringType(?methodB, ?typeB),
+  basic.SubtypeOf(?typeA, ?typeB),
+  ?name != "<init>",
+  Method_Descriptor(?methodB, ?desc),
+  Method_SimpleName(?methodB, ?name),
+  basic.MethodLookup(?name, ?desc, ?typeA, ?methodA).
+

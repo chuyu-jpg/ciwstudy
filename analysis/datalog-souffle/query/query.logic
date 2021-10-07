@@ -1,0 +1,44 @@
+/*_v(?local) <-
+   CallGraphEdge(?callerCtx, ?invocation, ?calleeCtx, ?method),
+   Method:SimpleName[?method] = "<methodName>",
+   AssignReturnValue[?invocation] = ?local.
+*/
+/*
+
+[112423]<evilpickles.crm.TestServlet: void doGet(javax.servlet.http.HttpServletRequest,javax.servlet.http.HttpServletResponse)>/a#_29
+  [112424]<evilpickles.crm.TestServlet: void doGet(javax.servlet.http.HttpServletRequest,javax.servlet.http.HttpServletResponse)>/b#_30
+
+r2
+
+*/
+
+_VarValues(?class, ?basevalue, ?c) <-
+  Var:Id[?var] = ?id,
+  Value:Type[?basevalue] = ?class,
+  MockObject(?basevalue, ?c),
+  ?id = "<evilpickles.crm.TestServlet: void doGet(javax.servlet.http.HttpServletRequest,javax.servlet.http.HttpServletResponse)>/b#_30",
+  VarPointsTo(_, ?basevalue, _, ?var).
+
+//_CallGraphEdge(?from, ?to) -> Method(?from), Method(?to).
+
+//_CallGraphEdge(?from, ?to) <-
+
+_targetMethod(?method) <-
+   Method:SimpleName[?method] = "mixOnShowing",
+   Method:DeclaringType[?method] = ?container,
+   Type:Id(?container:"java.awt.Component").
+
+_CallGraphEdge(?fromMethod, ?toMethod) <-
+  CallGraphEdge(_, ?invocation, _, ?toMethod),
+  Instruction:Method[?invocation] = ?fromMethod.
+
+/*
+_path(?a, ?b) <-
+  MainMethodDeclaration(?main),
+  (CallGraphPath(?main, ?a);
+  ?main = ?a),
+  (CallGraphPath(?b, ?target);
+  ?b = ?target),
+  CallGraphPath(?a, ?b),
+  _targetMethod(?target).
+*/

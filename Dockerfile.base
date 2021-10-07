@@ -1,0 +1,29 @@
+# Dockerfile for replication package 
+
+FROM ubuntu:18.04
+
+LABEL maintainer "na@example.com"
+RUN apt-get update
+RUN apt-get install locales ca-certificates gnupg apt-transport-https -y
+
+RUN echo "deb https://dl.bintray.com/souffle-lang/deb-unstable bionic main" | tee -a /etc/apt/sources.list
+RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 379CE192D401AB61
+RUN apt-get update
+RUN apt-get upgrade -y
+RUN apt-get update
+RUN apt-get install -y maven gcc git openjdk-8-jdk openjfx
+RUN apt-get install -y souffle
+RUN locale-gen en_US.UTF-8
+
+ENV JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
+RUN apt-get install unzip -y
+ENV LC_ALL=en_US.UTF-8
+
+RUN git clone https://bitbucket.org/yanniss/doop.git
+WORKDIR /doop
+RUN ./doop
+COPY dummy /dummy
+WORKDIR /dummy
+RUN mvn compile
+RUN mvn exec:java -Dexec.mainClass=foo.Foo
+

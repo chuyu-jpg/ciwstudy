@@ -1,0 +1,62 @@
+
+
+
+.decl SimpleParam(?paramType:Type, ?invocation:MethodInvocation, ?actual:Var, ?formal:Var)
+
+SimpleParam(?paramType, ?invocation, ?actual, ?formal) :-
+  SimpleRecursiveCallParameter(?method, ?paramType, ?invocation),
+//  Method_SimpleName(?method, ?name),
+//  ?name = "importCascadedStyleMaps",
+ // LoopedMethods(?method, ?method),
+  Instruction_Method(?invocation, ?method),
+   #ifdef ITER
+
+ (
+  LoopedMethods(?method, ?method);
+ (LoopedMethods(?method, ?m),
+ basic.MethodOverridesOther(?method, ?m))
+ ),
+ #endif
+  FormalParam(?index, ?method, ?formal),
+  ActualParam(?index, ?invocation, ?actual),
+  Var_Type(?formal, ?paramType).
+
+.decl SimpleParamWithFlow(?paramType:Type, ?invocation:MethodInvocation, ?a:Var)
+.decl IterVar(?m:Method, ?v:Var)
+.decl ArrayVar(?m:Method, ?v:Var)
+
+
+IterVar(?method, ?var) :-
+   Var_Type(?var, ?type),
+   ?type = "java.util.Iterator",
+   Var_DeclaringMethod(?var, ?method).
+
+ArrayVar(?method, ?from) :-
+ FlowFromArray(?from, _),
+ Var_DeclaringMethod(?from, ?method).
+
+
+SimpleParamWithFlow(?paramType, ?invocation, ?a) :-
+ SimpleParam(?paramType, ?invocation, ?a, ?f),
+ Instruction_Method(?invocation, ?method),
+
+
+ FlowPath(?a, ?f),
+ #ifndef OPAQUE_COMPOSITES
+ FlowFromLoad(?sig, _, ?t),
+ FlowPath(?a, ?t),
+ #endif
+// IterVar(?method, ?ar),
+// FlowPath(?a, ?ar),
+
+
+ Container(?container, ?paramType),
+ Composite(?container, _, ?sig),
+ !Flow(?f, ?a).
+
+.output SimpleParamWithFlow
+
+FlowPath(?a, ?to) :-
+  SimpleParam(_, _, ?a, _),
+  Flow(?to, ?a).
+

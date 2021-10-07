@@ -1,0 +1,69 @@
+
+.decl SimpleRecursiveCallThis(?method:Method, ?container:Type, ?component:Type, ?invocation:MethodInvocation)
+
+.decl SimpleRecursiveCallThisAll(?method:Method,  ?invocation:MethodInvocation)
+
+.decl SimpleRecursiveCallParameter(?fromMethod:Method, ?paramType:Type, ?invocation:MethodInvocation)
+
+.decl SimpleRecursiveCallParameterAll(?fromMethod:Method,  ?invocation:MethodInvocation)
+
+.decl Container(?con:Type, ?c:Type)
+
+// where the container/component is the receiver of the method
+//    MethodOverridesOther(?methodSub:Method, ?methodSuper:Method)
+SimpleRecursiveCallThisAll(?fromMethod,  ?invocation) :-
+   Method_DeclaringType(?fromMethod, ?fromType),
+   basic.SubtypeOf(?fromType, ?toType),
+   MethodInvocation_Method(?invocation, ?toMethod),
+   Instruction_Method(?invocation, ?fromMethod),
+   Method_SimpleName(?fromMethod, ?methodName),
+   ?methodName != "<init>",
+   (basic.MethodOverridesOther(?fromMethod, ?toMethod);
+   ?fromMethod = ?toMethod).
+
+.output Method_DeclaringType
+
+.output SimpleRecursiveCallThisAll
+
+SimpleRecursiveCallThis(?fromMethod, ?container, ?component,  ?invocation) :-
+   Composite(?container, ?component, _),
+   (basic.SubtypeOf(?c, ?container);
+   (basic.SupertypeOf(?c, ?container),
+   ?c != "java.lang.Object")),
+   Method_DeclaringType(?fromMethod, ?c),
+   Instruction_Method(?invocation, ?fromMethod),
+   MethodInvocation_Method(?invocation, ?toMethod),
+   Method_SimpleName(?fromMethod, ?name),
+   ?name != "<init>",
+   (basic.MethodOverridesOther(?fromMethod, ?toMethod);
+   ?fromMethod = ?toMethod).
+
+
+.output SimpleRecursiveCallThis
+
+SimpleRecursiveCallParameterAll(?method,  ?invocation) :-
+   isMethod(?method),
+   Method_SimpleName(?method, ?name),
+   ?name != "<init>",
+   MethodInvocation_Method(?invocation, ?method),
+   Instruction_Method(?invocation, ?method).
+
+.output SimpleRecursiveCallParameterAll
+
+Container(?container, ?c),
+SimpleRecursiveCallParameter(?method, ?c, ?invocation) :-
+   isMethod(?method),
+   Method_SimpleName(?method, ?name),
+   ?name != "<init>",
+   MethodInvocation_Method(?invocation, ?method),
+   Instruction_Method(?invocation, ?method),
+   Composite(?container, _, _),
+   FormalParam(_, ?method, ?var),
+   Var_Type(?var, ?c),
+     ((basic.SubtypeOf(?c, ?container);
+      ?c = ?container);
+      (basic.SupertypeOf(?c, ?container),
+       ?c != "java.lang.Object")).
+
+
+.output SimpleRecursiveCallParameter
